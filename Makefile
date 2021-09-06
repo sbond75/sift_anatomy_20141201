@@ -1,7 +1,7 @@
 # Copyright 2014 Ives Rey-Otero <ivesreyotero@gmail.com>
 
 # compilers configuration
-CC = gcc
+CC = clang #gcc
 OFLAGS = -g -O3
 LIBS = -L/usr/local/lib -lpng -lm
 

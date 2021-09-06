@@ -61,6 +61,11 @@ The SIFT method is patented
 
 #ifndef _LIB_SIFT_H_
 #define _LIB_SIFT_H_
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdio.h>
 
 
@@ -121,5 +126,9 @@ struct sift_keypoint_std *sift_read_keyslocation_from_file(char *filename, int *
 
 void sift_write_to_file(const char *filename, const struct sift_keypoint_std *k, int n);
 void fprintf_keypoint_std(FILE* f, const struct sift_keypoint_std* k, int n);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
