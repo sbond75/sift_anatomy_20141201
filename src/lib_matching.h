@@ -48,6 +48,10 @@ this program. If not, see
 #ifndef _LIB_MATCHING_H_
 #define _LIB_MATCHING_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void matching(struct sift_keypoints *k1,
               struct sift_keypoints *k2,
               struct sift_keypoints *out_k1,
@@ -63,5 +67,9 @@ void save_pairs_extra(const char* name,
                       const struct sift_keypoints *k1,
                       const struct sift_keypoints *k2A,
                       const struct sift_keypoints *k2B);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
