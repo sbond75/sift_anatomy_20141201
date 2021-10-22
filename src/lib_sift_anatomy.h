@@ -55,6 +55,9 @@ The SIFT method is patented
 #ifndef _LIB_SIFT_ANATOMY_H_
 #define _LIB_SIFT_ANATOMY_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include "lib_scalespace.h"
 #include "lib_keypoint.h"
@@ -93,5 +96,9 @@ void scalespace_compute_gradient(const struct sift_scalespace* scalespace,
 
 
 
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // _LIB_SIFT_ANATOMY_H_

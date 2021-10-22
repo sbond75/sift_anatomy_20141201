@@ -117,11 +117,16 @@ void matching(struct sift_keypoints *k1,
             int iA = indexA[i];
             int iB = indexB[i];
             struct keypoint* k;
+            struct keypoint* ptA = k2->list[iA];
+            struct keypoint* ptB = k2->list[iB];
+            /* if (sqrt(pow(ptA->x - ptB->x, 2) + pow(ptA->y - ptB->y, 2)) > 60) { //100) { */
+            /*     continue; */
+            /* } */
             k = sift_malloc_keypoint_from_model_and_copy(k1->list[i]);
             sift_add_keypoint_to_list(k, out_k1);
-            k = sift_malloc_keypoint_from_model_and_copy(k2->list[iA]);
+            k = sift_malloc_keypoint_from_model_and_copy(ptA);
             sift_add_keypoint_to_list(k, out_k2A);
-            k = sift_malloc_keypoint_from_model_and_copy(k2->list[iB]);
+            k = sift_malloc_keypoint_from_model_and_copy(ptB);
             sift_add_keypoint_to_list(k, out_k2B);
             j++;
         }

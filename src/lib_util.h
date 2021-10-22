@@ -1,6 +1,10 @@
 #ifndef _LIB_UTIL_H_
 #define _LIB_UTIL_H_ 
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -64,5 +68,9 @@ float modulus(float x, float y);
 
 // Multiply the rotation matric R_alpha with [x,y]^T
 void apply_rotation(float x, float y, float *rx, float *ry, float alpha);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // _LIB_UTIL_H_
