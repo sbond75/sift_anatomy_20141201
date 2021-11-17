@@ -46,6 +46,12 @@ this program. If not, see
  * @author Ives Rey-Otero <ives.rey-otero@cmla.ens-cachan.fr>
  */
 
+#include <algorithm>
+#include <vector>
+#include <cfloat>
+#include <iostream>
+
+extern "C" {
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -64,10 +70,10 @@ static void compute_keypoints_distance(float* dist,
     int n1 = k1->size;
     int n2 = k2->size;
     for(int i = 0; i < n1; i++){
-        const float * v1 =  k1->list[i]->descr;
+        const float * v1 =  k1->list[i]->descr; // An array of descriptors
         for(int j = 0; j < n2; j++){
-            const float * v2 =  k2->list[j]->descr;
-            float d = euclidean_distance(v1, v2, dim);
+            const float * v2 =  k2->list[j]->descr; // An array of descriptors
+            float d = euclidean_distance(v1, v2, dim /* length of v1 and v2 arrays */);
             dist[i*n2+j] = d;
         }
     }
@@ -89,10 +95,50 @@ static void find_the_two_nearest_keys(const float* dist, int n1, int n2,
     }
 }
 
-void matching(struct sift_keypoints *k1,
-              struct sift_keypoints *k2,
-              struct sift_keypoints *out_k1,
-              struct sift_keypoints *out_k2A,
+} // End extern "C"
+template<typename F>
+void forEachMatch(F f,
+                 struct sift_keypoints *k1, // Keypoints from the first image
+                 struct sift_keypoints *k2, // Keypoints from the second image
+                 float thresh,
+                 int flag,
+                 float* distA,
+                 float* distB,
+                 int* indexA,
+                 int* indexB
+) {
+    int n1 = k1->size;
+    int n2 = k2->size;
+
+    double average = 0;
+    double stddev = 0;
+    size_t processed = 0;
+    double min = DBL_MAX, max = DBL_MIN;
+
+    for(int i = 0; i < n1; i++){
+        float val;
+        val = (flag == 1 ? distA[i]/distB[i] : distA[i]);
+        if (val < thresh){
+            // The indices of the matching keypoints:
+            int iA = indexA[i];
+            int iB = indexB[i];
+            // Points ptA and ptB are matching points:
+            struct keypoint* k;
+            struct keypoint* ptA = k2->list[iA]; // The second matched keypoint
+            struct keypoint* ptB = k2->list[iB]; // Unknown meaning of this point
+            
+            f(k1->list[i], ptA, ptB);
+            
+            processed++;
+        }
+    }
+}
+
+extern "C" {
+void matching(struct sift_keypoints *k1, // Keypoints from the first image
+              struct sift_keypoints *k2, // Keypoints from the second image
+              struct sift_keypoints *out_k1, // Matched keypoints in first image
+              struct sift_keypoints *out_k2A, // Matched keypoints in second image
               struct sift_keypoints *out_k2B,
               float thresh,
               int flag)
@@ -100,37 +146,77 @@ void matching(struct sift_keypoints *k1,
     int n1 = k1->size;
     int n2 = k2->size;
 
-    float* dist  = (float*)xmalloc(n1*n2*sizeof(float));
+    float* dist  = (float*)xmalloc(n1*n2*sizeof(float)); // Holds all possible distances checked across both arrays k1->list and k2->list
     float* distA = (float*)xmalloc(n1*sizeof(float));
     float* distB = (float*)xmalloc(n1*sizeof(float));
     int* indexA  = (int*)xmalloc(n1*sizeof(int));
     int* indexB  = (int*)xmalloc(n1*sizeof(int));
 
-    compute_keypoints_distance(dist, k1, k2);
+    compute_keypoints_distance(dist, k1, k2); // Find the distance between all keypoints in k1 to those in k2, for every possible pair that can be made across both arrays
     find_the_two_nearest_keys(dist, n1, n2, indexA, indexB, distA, distB);
 
-    int j = 0;
-    for(int i = 0; i < n1; i++){
-        float val;
-        val = (flag == 1 ? distA[i]/distB[i] : distA[i]);
-        if (val < thresh){
-            int iA = indexA[i];
-            int iB = indexB[i];
-            struct keypoint* k;
-            struct keypoint* ptA = k2->list[iA];
-            struct keypoint* ptB = k2->list[iB];
-            /* if (sqrt(pow(ptA->x - ptB->x, 2) + pow(ptA->y - ptB->y, 2)) > 60) { //100) { */
-            /*     continue; */
-            /* } */
-            k = sift_malloc_keypoint_from_model_and_copy(k1->list[i]);
-            sift_add_keypoint_to_list(k, out_k1);
-            k = sift_malloc_keypoint_from_model_and_copy(ptA);
-            sift_add_keypoint_to_list(k, out_k2A);
-            k = sift_malloc_keypoint_from_model_and_copy(ptB);
-            sift_add_keypoint_to_list(k, out_k2B);
-            j++;
+//    std::vector<float> distances;
+//    std::transform(k2->list->, std::back_inserter(Y), [](const std::vector<int>& value) {
+//        return value.size();
+//    });
+//    cv::meanStdDev(
+    // Compute average
+    double average = 0;
+    double min = DBL_MAX, max = DBL_MIN;
+    size_t processed = 0;
+#define DIST(ptA, pt1) sqrt(pow(ptA->x - pt1->x, 2) + pow(ptA->y - pt1->y, 2))
+    forEachMatch([&](struct keypoint* pt1, struct keypoint* ptA, struct keypoint* ptB) {
+        double dist = DIST(ptA, pt1);
+        
+        average += dist;
+        
+        // Maintain min and max
+        if (dist < min) {
+            min = dist;
         }
-    }
+        if (dist > max) {
+            max = dist;
+        }
+        
+        processed++;
+    }, k1, k2, thresh, flag, distA, distB, indexA, indexB);
+    average /= processed;
+    
+    // Compute standard deviation
+    double stddev = 0;
+    processed = 0;
+    forEachMatch([&](struct keypoint* pt1, struct keypoint* ptA, struct keypoint* ptB) {
+        double dist = DIST(ptA, pt1);
+        
+        stddev += pow(dist - average, 2);
+        
+        processed++;
+    }, k1, k2, thresh, flag, distA, distB, indexA, indexB);
+    stddev /= processed;
+    stddev = sqrt(stddev);
+    //double threshold = stddev * 3;
+    double threshold = stddev * 6;
+    
+    // Save matches
+    forEachMatch([&](struct keypoint* pt1, struct keypoint* ptA, struct keypoint* ptB) {
+        double dist = DIST(ptA, pt1);
+
+        /* if (sqrt(pow(ptA->x - ptB->x, 2) + pow(ptA->y - ptB->y, 2)) > 60) { //100) { */
+        /*     continue; */
+        /* } */
+        if (abs(dist - average) > threshold) {
+            printf("Discarding %f, greater than %f\n", dist, threshold);
+            return;
+        }
+        struct keypoint* k = sift_malloc_keypoint_from_model_and_copy(pt1); // The first matched keypoint
+        sift_add_keypoint_to_list(k, out_k1); // The first matched keypoints
+        k = sift_malloc_keypoint_from_model_and_copy(ptA);
+        sift_add_keypoint_to_list(k, out_k2A); // The second matched keypoints
+        k = sift_malloc_keypoint_from_model_and_copy(ptB);
+        sift_add_keypoint_to_list(k, out_k2B); // Unknown meaning of this point
+        
+        processed++;
+    }, k1, k2, thresh, flag, distA, distB, indexA, indexB);
 
     free(dist);
     free(indexA);
@@ -174,4 +260,6 @@ void save_pairs_extra(const char* name,
         }
     }
     fclose(f);
+}
+
 }
