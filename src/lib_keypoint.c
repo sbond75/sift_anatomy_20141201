@@ -148,7 +148,7 @@ struct sift_keypoints* sift_malloc_keypoints()
 
 static void realloc_sift_keypoints(struct sift_keypoints* keys)
 {
-    keys->list = (struct keypoint**)xrealloc(keys->list, 2*keys->capacity*sizeof(struct keypoint*));
+    keys->list = (struct keypoint**)xrealloc(keys->list, 2*keys->capacity*sizeof(struct keypoint*), keys->capacity*sizeof(struct keypoint*));
     keys->capacity = 2*keys->capacity;
 }
 

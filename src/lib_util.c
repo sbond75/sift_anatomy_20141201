@@ -4,12 +4,23 @@
 #include <stdlib.h>
 #include <math.h>
 
+#include "../../src/tools/malloc_with_free_all.h"
+
+//#include "../../src/Timer.hpp"
+//#include "timers.hpp"
+//thread_local Timer mallocTimer;
+//thread_local double mallocTimerAccumulator;
+
+//extern "C" {
+
 // Allocate memory or abord on failure
 void* xmalloc(size_t size)
 {
     if (size == 0)
         fprintf(stderr,"xmalloc: zero size");
+//    mallocTimer.reset();
     void *p = malloc(size);
+//    mallocTimerAccumulator += mallocTimer.elapsed(); //mallocTimer.logElapsed("SIFT xmalloc");
     if (!p)
     {
         double sm = size / (0x100000 * 1.0);
@@ -21,9 +32,22 @@ void* xmalloc(size_t size)
 }
 
 // Reallocate memory of abort on failure
-void* xrealloc(void* p, size_t size)
+void* xrealloc(void* p, size_t size, size_t oldsize)
 {
-    void *r = realloc(p, size);
+    void *r;
+    if (currentMallocImpl == MallocImpl_Default) {
+        r = realloc(p, size);
+    }
+    else {
+        if (size > oldsize) {
+            r = malloc(size);
+            // Manual memcpy
+            memcpy(r, p, oldsize);
+        }
+        else {
+            r = p;
+        }
+    }
     if (!r) fprintf(stderr,"realloc failed");
     return r;
 }
@@ -207,3 +231,5 @@ void apply_rotation(float x, float y, float *rx, float *ry, float alpha)
     *rx = tx;
     *ry = ty;
 }
+
+//}

@@ -24,7 +24,7 @@ extern "C" {
 void* xmalloc(size_t size);
 
 // Reallocate memory of abort on failure
-void* xrealloc(void* p, size_t size);
+void* xrealloc(void* p, size_t size, size_t oldsize);
 
 // Free memory allocated by xmalloc or xrealloc.
 void xfree(void* p);

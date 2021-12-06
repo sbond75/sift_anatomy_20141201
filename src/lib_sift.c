@@ -117,7 +117,7 @@ static struct sift_keypoints* sift_translate_standard_into_anatomy(const struct 
 void sift_translate_anatomy_into_standard(const struct sift_keypoints *keys, struct sift_keypoint_std* k, int *n)
 {
     *n = keys->size;
-    k = (struct sift_keypoint_std*)xrealloc(k, (*n)*sizeof(*k));
+    k = (struct sift_keypoint_std*)xrealloc(k, (*n)*sizeof(*k),(*n)*sizeof(*k));
     for(int i = 0; i < *n; i++){
         k[i].x = keys->list[i]->x;
         k[i].y = keys->list[i]->y;
