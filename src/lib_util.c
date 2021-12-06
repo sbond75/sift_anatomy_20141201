@@ -28,7 +28,7 @@ void* xmalloc(size_t size)
                 "%zu bytes (%gMB)",//:\"%s\"",
                 size, sm);//, strerror(errno));
     }
-    return p;
+    return p;;
 }
 
 // Reallocate memory of abort on failure
