@@ -777,7 +777,7 @@ struct sift_parameters* sift_assign_default_parameters()
     p->delta_min = 0.5;
     p->sigma_in = 0.5;
     p->C_DoG = 0.013333333;  // = 0.04/3
-    p->C_edge = 10;
+    p->C_edge = 2;
     p->n_bins = 36;
     p->lambda_ori = 1.5;
     p->t = 0.80;
