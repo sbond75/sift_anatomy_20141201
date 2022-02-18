@@ -194,8 +194,8 @@ void matching(struct sift_keypoints *k1, // Keypoints from the first image
     }, k1, k2, thresh, flag, distA, distB, indexA, indexB);
     stddev /= processed;
     stddev = sqrt(stddev);
-    //double threshold = stddev * 3;
-    double threshold = stddev * 6;
+    double threshold = stddev * 3;
+//    double threshold = stddev * 6;
     
     // Save matches
     forEachMatch([&](struct keypoint* pt1, struct keypoint* ptA, struct keypoint* ptB) {
